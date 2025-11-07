@@ -1,2 +1,2 @@
 # Heart_Disease
-bad stuff
+Predicts heart disease in patients using data from heart data sheet.
