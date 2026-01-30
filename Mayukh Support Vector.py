@@ -6,7 +6,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score , classification_report , confusion_matrix
 # Load Dataset
-data = pd.read_csv("heart.csv")
+data = pd.read_csv("cleaned_heart.csv")
 X = data.drop("target" , axis=1)
 y = data["target"]
 
