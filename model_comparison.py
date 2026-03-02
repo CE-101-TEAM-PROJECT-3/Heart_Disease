@@ -14,7 +14,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (
     confusion_matrix, ConfusionMatrixDisplay, RocCurveDisplay,
 )
-from advanced_ensembles import xgb_pipeline, voting_pipeline, ultimate_pipeline
+from Heart_Disease.enes.advanced_ensembles import xgb_pipeline, voting_pipeline, ultimate_pipeline
 
 # ---------------------------------------------------------------------------
 # Constants
