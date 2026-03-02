@@ -1,6 +1,8 @@
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, RobustScaler
 from sklearn.linear_model import LogisticRegression
+from imblearn.pipeline import Pipeline as ImbPipeline
+from imblearn.over_sampling import SMOTE
 from sklearn.svm import SVC
 from sklearn.ensemble import (
     RandomForestClassifier,
@@ -40,4 +42,10 @@ voting_pipeline = Pipeline([
         ],
         voting="soft",
     )),
+])
+
+ultimate_pipeline = ImbPipeline([
+    ("scaler", RobustScaler()),
+    ("smote", SMOTE(random_state=RANDOM_STATE)),
+    ("lr", LogisticRegression(max_iter=1000, random_state=RANDOM_STATE)),
 ])

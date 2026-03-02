@@ -14,7 +14,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (
     confusion_matrix, ConfusionMatrixDisplay, RocCurveDisplay,
 )
-from advanced_ensembles import xgb_pipeline, voting_pipeline
+from advanced_ensembles import xgb_pipeline, voting_pipeline, ultimate_pipeline
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -53,6 +53,7 @@ MODEL_NAMES = [
     "Random Forest",
     "XGBoost (Tuned)",
     "Soft Voting Ensemble",
+    "LR (Robust+SMOTE)",
 ]
 
 # Columns to drop for the feature-selected LR (Nicholas's approach).
@@ -203,6 +204,7 @@ def build_pipelines(X, y, cv):
     from sklearn.base import clone
     pipelines["XGBoost (Tuned)"] = clone(xgb_pipeline)
     pipelines["Soft Voting Ensemble"] = clone(voting_pipeline)
+    pipelines["LR (Robust+SMOTE)"] = clone(ultimate_pipeline)
 
     return pipelines
 
