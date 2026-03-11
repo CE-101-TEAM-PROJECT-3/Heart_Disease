@@ -10,9 +10,10 @@ A machine learning pipeline that predicts whether a patient has heart disease ba
 clinical measurements. Built on the Cleveland Heart Disease dataset (302 samples) from the
 UCI Machine Learning Repository.
 
-Nine models were trained and compared. **K-Nearest Neighbours (GridSearchCV)** was selected
-as the final model with **83.2% accuracy** and **0.911 ROC-AUC** -- the highest on both
-metrics.
+Nine models were trained and compared. **Logistic Regression** was selected as the final
+model -- it detects **90.9% of heart disease cases** with the lowest overall failure rate
+(16.2%) among the safest models. Full analysis in
+[docs/final_model_analysis.md](docs/final_model_analysis.md).
 
 ## Dataset
 
@@ -28,26 +29,26 @@ metrics.
 ```python
 Pipeline([
     ("scaler", StandardScaler()),
-    ("knn", KNeighborsClassifier(n_neighbors=16, weights="uniform", metric="manhattan")),
+    ("lr", LogisticRegression(max_iter=1000, random_state=42)),
 ])
 ```
 
-Selected over 8 other models (Logistic Regression, SVM, Random Forest, XGBoost, Voting
-Ensemble, and others). Full analysis in [docs/final_model_analysis.md](docs/final_model_analysis.md).
+Selected over 8 other models because it provides the best balance of safety (fewest missed
+disease cases) and accuracy, while being fully explainable and dependency-free.
 
 ## Results
 
-| Model                  | Accuracy | ROC-AUC |
-|------------------------|----------|---------|
-| **K-NN (GridSearchCV)**| **83.2%**| **0.911** |
-| LR (Robust+SMOTE)     | 83.1%    | ~0.896  |
-| SVM (RBF)             | 82.9%    | ~0.905  |
-| Soft Voting Ensemble   | 82.8%    | ~0.907  |
-| Logistic Regression    | 82.7%    | ~0.905  |
-| LR (feature select)   | 82.5%    | ~0.904  |
-| K-NN (tuned k)        | 82.4%    | ~0.901  |
-| XGBoost (Tuned)       | 82.2%    | ~0.891  |
-| Random Forest          | 81.7%    | ~0.907  |
+| Model                        | Accuracy | Disease Missed (FN) | Detection Rate |
+|------------------------------|----------|--------------------:|---------------:|
+| K-NN (GridSearchCV)          | 83.2%    | 18/164 (11.0%)      | 89.0%          |
+| LR (Robust+SMOTE)           | 83.1%    | 15/164 (9.1%)       | 90.9%          |
+| SVM (RBF)                   | 82.9%    | 19/164 (11.6%)      | 88.4%          |
+| Soft Voting Ensemble         | 82.8%    | 19/164 (11.6%)      | 88.4%          |
+| **Logistic Regression**     | **82.7%**| **15/164 (9.1%)**   | **90.9%**      |
+| LR (feature select)         | 82.5%    | 16/164 (9.8%)       | 90.2%          |
+| K-NN (tuned k)              | 82.4%    | 14/164 (8.5%)       | 91.5%          |
+| XGBoost (Tuned)             | 82.2%    | 24/164 (14.6%)      | 85.4%          |
+| Random Forest                | 81.7%    | 23/164 (14.0%)      | 86.0%          |
 
 Evaluated using Repeated Stratified 5-Fold Cross-Validation (3 repeats, 15 folds total)
 with sklearn Pipelines to prevent data leakage.
