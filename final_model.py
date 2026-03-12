@@ -1,3 +1,4 @@
+import joblib
 import pandas as pd
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -44,3 +45,6 @@ print(classification_report(y, y_pred, target_names=["No Disease", "Disease"]))
 
 model.fit(X, y)
 print("Model trained on full dataset and ready for predictions.")
+
+joblib.dump(model, "app/pipeline.pkl")
+print("Model saved to pipeline.pkl")
