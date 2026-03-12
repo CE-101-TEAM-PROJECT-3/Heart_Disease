@@ -56,6 +56,10 @@ MODEL_NAMES = [
     "LR (Robust+SMOTE)",
 ]
 
+# The model selected for production based on safety analysis
+# (lowest false negative rate without synthetic data, explainable coefficients)
+SELECTED_MODEL = "Logistic Regression"
+
 # Columns to drop for the feature-selected LR (Nicholas's approach).
 # Listed under both raw and renamed variants so it works on every dataset.
 NICHOLAS_DROP_COLS = {
@@ -259,8 +263,8 @@ def plot_grouped_bar(df, save_path="results/comparison_by_model.png"):
     x = np.arange(n_models)
     width = 0.8 / n_datasets
 
-    # Find the overall best model (highest mean accuracy across all datasets)
-    best_model = df.groupby("Model")["Accuracy"].mean().idxmax()
+    # Highlight the selected model (chosen for safety, not just accuracy)
+    best_model = SELECTED_MODEL
 
     fig, ax = plt.subplots(figsize=(14, 7))
     for i, ds in enumerate(dataset_names):
@@ -314,24 +318,23 @@ def plot_heatmap(df, save_path="results/comparison_heatmap.png"):
         linewidths=0.5, ax=ax, vmin=60, vmax=100,
     )
 
-    # Annotate cells, bolding the best value per column (dataset)
+    # Annotate cells, highlighting the selected model
     for col_idx, ds in enumerate(pivot.columns):
-        best_val = pivot[ds].max()
         for row_idx, model in enumerate(pivot.index):
             val = pivot.loc[model, ds]
-            is_best = abs(val - best_val) < 0.01
+            is_selected = model == SELECTED_MODEL
             ax.text(col_idx + 0.5, row_idx + 0.5, f"{val:.1f}",
                     ha="center", va="center",
-                    fontsize=11 if is_best else 10,
-                    fontweight="bold" if is_best else "normal",
+                    fontsize=11 if is_selected else 10,
+                    fontweight="bold" if is_selected else "normal",
                     color="black")
-            if is_best:
+            if is_selected:
                 ax.add_patch(plt.Rectangle(
                     (col_idx, row_idx), 1, 1,
                     fill=False, edgecolor="gold", linewidth=3,
                 ))
 
-    ax.set_title("Mean Accuracy (%) -- Model x Dataset  [gold border = best per dataset]")
+    ax.set_title("Mean Accuracy (%) -- Model x Dataset  [gold border = selected model]")
     plt.tight_layout()
     plt.savefig(save_path, dpi=150)
     print(f"Saved {save_path}")
@@ -382,16 +385,14 @@ def plot_roc_curves(all_pipelines, datasets, save_path="results/comparison_roc.p
             mean_auc = np.mean(aucs)
             roc_data[model_name] = (mean_fpr, mean_tpr, mean_auc)
 
-        best_model = max(roc_data, key=lambda m: roc_data[m][2])
-
         for model_name, (fpr, tpr, auc) in roc_data.items():
-            is_best = model_name == best_model
-            lw = 3.0 if is_best else 1.2
+            is_selected = model_name == SELECTED_MODEL
+            lw = 3.0 if is_selected else 1.2
             line_label = f"{model_name} (AUC={auc:.3f})"
-            if is_best:
-                line_label += " *BEST*"
+            if is_selected:
+                line_label += " *SELECTED*"
             ax.plot(fpr, tpr, label=line_label, linewidth=lw,
-                    alpha=1.0 if is_best else 0.7)
+                    alpha=1.0 if is_selected else 0.7)
 
         ax.plot([0, 1], [0, 1], "k--", linewidth=0.8, label="Chance")
         ax.set_title(f"ROC -- {ds_label}")
@@ -415,11 +416,7 @@ def plot_confusion_matrices(all_pipelines, datasets, results_df,
     n_models = len(MODEL_NAMES)
     cv = StratifiedKFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
 
-    # Find the best model per dataset by accuracy
-    best_per_ds = {}
-    for ds in dataset_labels:
-        ds_rows = results_df[results_df["Dataset"] == ds]
-        best_per_ds[ds] = ds_rows.loc[ds_rows["Accuracy"].idxmax(), "Model"]
+    # Highlight the selected model (chosen for safety, not just accuracy)
 
     fig, axes = plt.subplots(n_ds, n_models, figsize=(3.5 * n_models, 3.5 * n_ds))
 
@@ -432,17 +429,17 @@ def plot_confusion_matrices(all_pipelines, datasets, results_df,
             pipe = pipelines[model_name]
             y_pred = cross_val_predict(pipe, X, y, cv=cv)
             cm = confusion_matrix(y, y_pred)
-            is_best = best_per_ds[label] == model_name
-            cmap = "YlOrRd" if is_best else "Blues"
+            is_selected = model_name == SELECTED_MODEL
+            cmap = "YlOrRd" if is_selected else "Blues"
             ConfusionMatrixDisplay(cm, display_labels=["No Disease", "Disease"]).plot(
                 ax=ax, cmap=cmap, colorbar=False,
             )
             title_text = model_name
             if row == 0:
-                if is_best:
-                    title_text += " *BEST*"
+                if is_selected:
+                    title_text += " *SELECTED*"
                 ax.set_title(title_text, fontsize=9,
-                             fontweight="bold" if is_best else "normal")
+                             fontweight="bold" if is_selected else "normal")
             else:
                 ax.set_title("")
             if col == 0:
@@ -450,8 +447,8 @@ def plot_confusion_matrices(all_pipelines, datasets, results_df,
             else:
                 ax.set_ylabel("")
             ax.set_xlabel("" if row < n_ds - 1 else "Predicted", fontsize=8)
-            # Gold border for best
-            if is_best:
+            # Gold border for selected model
+            if is_selected:
                 for spine in ax.spines.values():
                     spine.set_edgecolor("gold")
                     spine.set_linewidth(3)
